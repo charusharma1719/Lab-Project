@@ -1,0 +1,93 @@
+using System;
+using System.Collections.Generic;
+
+public interface IBillingStrategy
+{
+    decimal Calculate(decimal usage);
+}
+
+public class FlatRate : IBillingStrategy
+{
+    public decimal Calculate(decimal usage) => 500;
+}
+
+public class UsageBased : IBillingStrategy
+{
+    public decimal Calculate(decimal usage) => usage * 10;
+}
+
+
+
+public interface IDiscount
+{
+    decimal Apply(decimal amount);
+}
+
+public class Seasonal : IDiscount
+{
+    public decimal Apply(decimal amount) => amount * 0.9m;
+}
+
+public class Coupon : IDiscount
+{
+    public decimal Apply(decimal amount) => amount - 50;
+}
+
+
+public interface IState
+{
+    void Next(Invoice inv);
+}
+
+public class Draft : IState
+{
+    public void Next(Invoice inv) => inv.State = new Finalized();
+}
+
+public class Finalized : IState
+{
+    public void Next(Invoice inv) => inv.State = new Paid();
+}
+
+public class Paid : IState
+{
+    public void Next(Invoice inv) =>
+        throw new Exception("Already Paid");
+}
+
+public class Invoice
+{
+    public decimal Amount;
+    public IState State = new Draft();
+
+    public void MoveNext() => State.Next(this);
+}
+
+
+
+class Program
+{
+    static void Main()
+    {
+        IBillingStrategy billing = new UsageBased();
+        decimal amount = billing.Calculate(50);
+
+        List<IDiscount> discounts = new List<IDiscount>
+        {
+            new Seasonal(),
+            new Coupon()
+        };
+
+        foreach (var d in discounts)
+            amount = d.Apply(amount);
+
+        var invoice = new Invoice { Amount = amount };
+
+        Console.WriteLine("Amount: " + invoice.Amount);
+
+        invoice.MoveNext(); // Draft → Finalized
+        invoice.MoveNext(); // Finalized → Paid
+
+        Console.WriteLine("Invoice Paid");
+    }
+}
