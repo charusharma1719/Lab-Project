@@ -85,8 +85,8 @@ class Program
 
         Console.WriteLine("Amount: " + invoice.Amount);
 
-        invoice.MoveNext(); // Draft → Finalized
-        invoice.MoveNext(); // Finalized → Paid
+        invoice.MoveNext(); 
+        invoice.MoveNext(); 
 
         Console.WriteLine("Invoice Paid");
     }
